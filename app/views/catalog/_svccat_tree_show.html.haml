@@ -11,24 +11,63 @@
         %br
       .col-md-9
         .form-group
-          %label.col-md-2.control-label
+          %label.col-md-3.control-label
             = _('Name')
           .col-md-8
             %p.form-control-static
               = @record.name
         .form-group
-          %label.col-md-2.control-label
+          %label.col-md-3.control-label
             = _('Description')
           .col-md-8
             %p.form-control-static
               = @record.description
         .form-group
-          %label.col-md-2.control-label
+          %label.col-md-3.control-label
             = _('Long Description')
           .col-md-8
             %p.form-control-static#long_description
               %miq-sanitize{:value => @record.long_description}
-
+        - if @record.class == ServiceTemplate
+          - remaining_budget = User.current_user.remaining_budget
+          - service_template_cost = @record.total_cost
+          - chargeback_costs = @record.chargeback_costs
+          .form-group
+            %label.col-md-3.control-label
+              = _("User's remaining budget")
+            .col-md-8
+              %p.form-control-static#long_description
+                = _("$ #{remaining_budget}")
+          .form-group
+            %label.col-md-3.control-label
+              = _('Count of VMs')
+            .col-md-8
+              %p.form-control-static#long_description
+                = _("#{@record.config_info[:number_of_vms][0].to_i}")
+          .form-group
+            %label.col-md-3.control-label
+              = _('Cost of Allocated CPUs')
+            .col-md-8
+              %p.form-control-static#long_description
+                = _("$ #{chargeback_costs.cpu_allocated_cost}")
+          .form-group
+            %label.col-md-3.control-label
+              = _('Cost of Allocated Memory')
+            .col-md-8
+              %p.form-control-static#long_description
+                = _("$ #{chargeback_costs.memory_allocated_cost}")
+          .form-group
+            %label.col-md-3.control-label
+              = _('Cost of allocated Disk Size')
+            .col-md-8
+              %p.form-control-static#long_description
+                = _("$ #{chargeback_costs.storage_allocated_cost}")
+          .form-group
+            %label.col-md-3.control-label
+              = _('Total Cost')
+            .col-md-8
+              %p.form-control-static#long_description
+                = _("$ #{service_template_cost}")
     .form-group
       .col-md-1{:align => "center"}
         #buttons
@@ -36,9 +75,10 @@
                        :class   => "btn btn-primary",
                        :alt     => t = _("Order this Service"),
                        :title   => t,
+                       :disabled => @record.class == ServiceTemplate ? !(remaining_budget > service_template_cost) : false,
                        :onclick => "miqAjaxButton('#{url_for_only_path(:action => "svc_catalog_provision",
                                                              :id     => @record.id,
-                                                           :button => "order")}');")
+                                                             :button => "order")}');")
 
 :javascript
   miq_bootstrap('#long_description', 'miq.helpers');
